@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selenium-test
+  labels:
+    app: selenium-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: selenium-test
+  template:
+    metadata:
+      labels:
+        app: selenium-test
+    spec:
+      containers:
+      - name: selenium-test
+        image: <your-dockerhub-username>/selenium-test:latest
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+        restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: selenium-test-service
+spec:
+  selector:
+    app: selenium-test
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
