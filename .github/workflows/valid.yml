@@ -1,0 +1,48 @@
+name: Create and Deploy to Kubernetes Cluster with kind
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout Code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Install kind
+      - name: Install kind
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+
+      # Step 3: Create kind Cluster
+      - name: Create kind Cluster
+        run: |
+          kind create cluster --name ci-cd-cluster
+          kubectl cluster-info
+
+      # Step 4: Deploy Application
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/
+          kubectl get pods -o wide
+
+          # Step 5: Check Application Status
+      - name: Validate Deployment
+        run: |
+          kubectl get pods
+          kubectl get services
+
+      - name: Verify Application Pods
+        run: kubectl get pods
+
+      - name: Check Service URL
+        run: kubectl get services
+
+
+
