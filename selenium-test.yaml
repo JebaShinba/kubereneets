@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: selenium-test
-        image: <your-dockerhub-username>/selenium-test:latest
+        image: jebashinba/selenium-test:latest
         resources:
           requests:
             memory: "512Mi"
