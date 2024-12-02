@@ -1,0 +1,25 @@
+name: Create Kubernetes Cluster
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-kubernetes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apt-transport-https ca-certificates curl
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo apt-get install -y docker.io kubelet kubeadm kubectl
+
+      - name: Initialize Kubernetes Cluster
+        run: kubeadm init --pod-network-cidr=192.168.0.0/16
+
+      - name: Configure Kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
+          sudo chown $(id -u):$(id -g) $HOME/.kube/config
