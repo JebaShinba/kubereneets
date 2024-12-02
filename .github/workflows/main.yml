@@ -28,24 +28,4 @@ jobs:
         push: true
         tags: jebashinba/selenium-test:latest
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Test Cluster Access
-      run: |
-        kubectl get nodes
-
-
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.27.0'
-        kubeconfig: ${{ secrets.KUBECONFIG }}
-
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl apply -f selenium-test.yaml
+  
