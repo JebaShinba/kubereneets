@@ -1,6 +1,9 @@
 name: Create Kubernetes Cluster
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -13,11 +16,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y apt-transport-https ca-certificates curl
 
-          # Add Kubernetes APT repository
+          # Add the Kubernetes APT repository for the current Ubuntu version (Jammy)
           curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+          echo "deb https://apt.kubernetes.io/ kubernetes-apt main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
-          # Install Docker and Kubernetes packages
+          # Update the package list and install Docker and Kubernetes
           sudo apt-get update
           sudo apt-get install -y docker.io kubelet kubeadm kubectl
 
@@ -29,4 +32,3 @@ jobs:
           mkdir -p $HOME/.kube
           sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
           sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
