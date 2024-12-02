@@ -30,6 +30,31 @@ jobs:
           # Update package list and install containerd.io
           sudo apt-get update
           sudo apt-get install -y containerd.io
+          # Update package list and install Kubernetes components
+          sudo apt-get update
+          sudo apt-get install -y kubelet kubeadm kubectl
+          sudo apt-mark hold kubelet kubeadm kubectl
+
+      - name: Verify kubeadm Installation
+        run: kubeadm version
+  
+      - name: Initialize Kubernetes Cluster
+        run: |
+            sudo kubeadm init --pod-network-cidr=192.168.0.0/16
+      - name: Configure kubectl
+        run: |
+            mkdir -p $HOME/.kube
+            sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
+            sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  
+      - name: Install Networking Plugin (WeaveNet)
+        run: |
+            kubectl apply -f https://github.com/weaveworks/weave/releases/download/latest-release/weave-daemonset-k8s.yaml
+  
+      - name: Verify Cluster
+        run: |
+            kubectl get nodes
+            kubectl cluster-info
 
       - name: Initialize Kubernetes Cluster
         run: |
