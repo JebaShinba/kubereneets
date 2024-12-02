@@ -1,10 +1,13 @@
 name: Create Kubernetes Cluster
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Trigger workflow manually
 
 jobs:
-  setup-kubernetes:
+  create-cluster:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,19 +16,35 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y apt-transport-https ca-certificates curl
 
-          # Add the Kubernetes APT repository
-          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+          # Install Docker
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
 
-          # Update package list and install Docker and Kubernetes components
+          # Install Kubernetes components
+          sudo curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
           sudo apt-get update
-          sudo apt-get install -y docker.io kubelet kubeadm kubectl
+          sudo apt-get install -y kubelet kubeadm kubectl
+          sudo apt-mark hold kubelet kubeadm kubectl
 
       - name: Initialize Kubernetes Cluster
-        run: kubeadm init --pod-network-cidr=192.168.0.0/16
+        run: |
+          sudo kubeadm init --pod-network-cidr=192.168.0.0/16
 
-      - name: Configure Kubectl
+      - name: Configure kubectl
         run: |
           mkdir -p $HOME/.kube
           sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
           sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+      - name: Install Networking Plugin (WeaveNet)
+        run: |
+          kubectl apply -f https://github.com/weaveworks/weave/releases/download/latest-release/weave-daemonset-k8s.yaml
+
+      - name: Verify Cluster
+        run: |
+          kubectl get nodes
+          kubectl cluster-info
+
+
