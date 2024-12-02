@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD with Kubernetes
 
 on:
   push:
@@ -6,29 +6,32 @@ on:
       - main
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout Code
+    # Checkout code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Step 2: Build and Push Docker Image
-    - name: Build and Push Docker Image
-      uses: docker/build-push-action@v4
+    # Set up kubectl
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
       with:
-        context: .
-        push: true
-        tags: jebashinba/selenium-test:latest
+        version: 'latest'
 
-    # Step 3: Configure kubeconfig
-    - name: Configure kubeconfig
-      run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+    # Configure kubectl
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
 
-    # Step 4: Deploy to Kubernetes
+    # Debug kubectl context
+    - name: Debug kubectl context
+      run: kubectl config view
+
+    # Deploy to Kubernetes
     - name: Deploy to Kubernetes
       run: |
-        kubectl set image deployment/my-deployment my-container=jebashinba/selenium-test:latest
-        kubectl rollout status deployment/my-deployment
-
+        kubectl apply -f k8s/deployment.yml --validate=false
+        kubectl rollout status deployment/my-app
