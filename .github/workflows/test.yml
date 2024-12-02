@@ -1,0 +1,24 @@
+name: Create Kubernetes Cluster with kind
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-cluster:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install kind
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+
+      - name: Create kind Cluster
+        run: |
+          kind create cluster --name ci-cd-cluster
+          kubectl cluster-info
