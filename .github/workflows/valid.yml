@@ -29,7 +29,7 @@ jobs:
           push: true
           tags: jebashinba/selenium-test:latest
   
-      # Step 1: Checkout Code
+      
      - name: Checkout Code
        uses: actions/checkout@v3
 
