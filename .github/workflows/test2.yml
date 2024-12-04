@@ -18,6 +18,7 @@ jobs:
         curl -s https://api.github.com/repos/stackrox/kube-linter/releases/latest | \
         grep "browser_download_url.*linux" | \
         cut -d : -f 2,3 | tr -d '"' | wget -i -
+        tar -xzf kube-linter-*.tar.gz
         chmod +x kube-linter
         sudo mv kube-linter /usr/local/bin/
 
