@@ -1,0 +1,34 @@
+name: Lint Kubernetes Configurations
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install kube-linter
+      run: |
+        curl -s https://api.github.com/repos/stackrox/kube-linter/releases/latest | \
+        grep "browser_download_url.*linux" | \
+        cut -d : -f 2,3 | tr -d '"' | wget -i -
+        chmod +x kube-linter
+        sudo mv kube-linter /usr/local/bin/
+
+    - name: Validate Kubernetes manifests
+      run: |
+        kube-linter lint manifests/
+
+    - name: Install Helm
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+    - name: Lint Helm charts
+      run: |
+        helm lint ./charts/myapp
