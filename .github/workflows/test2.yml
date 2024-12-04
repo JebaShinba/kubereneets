@@ -53,9 +53,10 @@ jobs:
         
     - name: List files in k8s directory
       run: |
-            ls -R k8s
-        
-  
-    - name: Lint Helm charts
+        echo "Listing files in the 'k8s' directory:"
+        ls -R k8s
+
+    - name: Lint Helm chart
       run: |
-          helm lint ./k8s
+        echo "Linting Helm chart..."
+        helm lint ./k8s
