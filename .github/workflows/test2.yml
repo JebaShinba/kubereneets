@@ -51,4 +51,4 @@ jobs:
   
     - name: Lint Helm charts
       run: |
-          helm lint ./charts/myapp
+          helm lint ./k8s/myapp
