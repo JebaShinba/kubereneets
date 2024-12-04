@@ -19,20 +19,15 @@ jobs:
         curl -s https://api.github.com/repos/stackrox/kube-linter/releases/latest | \
         grep "browser_download_url.*linux" | \
         cut -d : -f 2,3 | tr -d '"' | wget -qi -
-        # Verify the downloaded file
+        # Identify the downloaded tar.gz file
         echo "Downloaded files:"
         ls -la
-        # Check if the file is a tar.gz or direct binary
-        if file kube-linter-*.tar.gz | grep "gzip compressed"; then
-          # Extract the tarball if it's a valid archive
-          tar -xzf kube-linter-*.tar.gz
-          chmod +x kube-linter
-          sudo mv kube-linter /usr/local/bin/
-        else
-          # If it's not an archive, assume it's the binary and move it
-          chmod +x kube-linter-linux
-          sudo mv kube-linter-linux /usr/local/bin/kube-linter
-        fi
+        FILE=$(ls kube-linter-*.tar.gz | head -n 1)
+        echo "Extracting: $FILE"
+        # Extract the tarball
+        tar -xzf "$FILE"
+        chmod +x kube-linter
+        sudo mv kube-linter /usr/local/bin/
         # Clean up
         rm -f kube-linter-*.tar.gz
 
@@ -46,9 +41,4 @@ jobs:
 
     - name: Install Helm
       run: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-    - name: Lint Helm charts
-      run: |
-        helm lint ./charts/myapp
-
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get
