@@ -48,6 +48,13 @@ jobs:
     - name: Install Helm
       run: |
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    - name: Checkout repository
+      uses: actions/checkout@v3
+        
+    - name: List files in k8s directory
+      run: |
+            ls -R k8s
+        
   
     - name: Lint Helm charts
       run: |
