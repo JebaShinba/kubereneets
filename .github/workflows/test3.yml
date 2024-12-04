@@ -58,7 +58,7 @@ jobs:
     - name: Run yamllint on k8s resources
       run: |
         sudo apt-get install -y yamllint
-        yamllint k8s/**/*.yaml
+        find k8s/ -name "*.yaml" -exec yamllint {} +
         echo "YAML linting complete"
 
     - name: Check Helm Chart Validity
