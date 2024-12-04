@@ -56,7 +56,12 @@ jobs:
         echo "Listing files in the 'k8s' directory:"
         ls -R k8s
 
+    - name: Rename chart.yaml to Chart.yaml
+      run: |
+          mv k8s/chart.yaml k8s/Chart.yaml
+          echo "Renamed chart.yaml to Chart.yaml"
+  
     - name: Lint Helm chart
       run: |
-        echo "Linting Helm chart..."
-        helm lint ./k8s
+          echo "Linting Helm chart..."
+          helm lint ./k8s
