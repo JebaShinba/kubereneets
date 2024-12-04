@@ -60,7 +60,44 @@ jobs:
       run: |
           mv k8s/chart.yaml k8s/Chart.yaml
           echo "Renamed chart.yaml to Chart.yaml"
+
+
+    
+    - name: Check for chart.yaml
+      run: |
+        if [ -f "k8s/chart.yaml" ]; then
+          echo "'chart.yaml' found in 'k8s'. Renaming it to 'Chart.yaml'..."
+        else
+          echo "Error: 'chart.yaml' file not found. Exiting process."
+          exit 1
+        fi
+        - name: Run yamllint on k8s resources
+        run: |
+          echo "Running yamllint on Kubernetes YAML files..."
+          sudo apt-get install -y yamllint
+          yamllint k8s/**/*.yaml
+          echo "YAML linting complete"
   
+    - name: Check Helm Chart Validity
+      run: |
+          if helm lint ./k8s; then
+            echo "Helm chart is valid."
+          else
+            echo "Helm chart is invalid. Please review the error message."
+            exit 1
+          fi
+  
+    - name: Helm Template Rendering
+      run: |
+          echo "Rendering Helm templates..."
+          helm template ./k8s
+          echo "Template rendering complete"
+  
+    - name: Test Helm Upgrade (optional)
+      run: |
+          echo "Testing Helm upgrade with the current chart version..."
+          helm upgrade --install myapp ./k8s --dry-run
+          echo "Helm upgrade dry-run complete"
     - name: Lint Helm chart
       run: |
           echo "Linting Helm chart..."
