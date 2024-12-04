@@ -35,13 +35,13 @@ jobs:
       run: |
         kube-linter version
 
-    - name: Validate Kubernetes manifests
+    - name: Validate Kubernetes k8s
       run: |
           # Verify that the directory exists
-          if [ -d "manifests" ]; then
-            kube-linter lint manifests/
+          if [ -d "k8s" ]; then
+            kube-linter lint k8s/
           else
-            echo "Error: 'manifests/' directory not found. Skipping kube-linter lint."
+            echo "Error: 'k8s/' directory not found. Skipping kube-linter lint."
             exit 1
           fi
   
