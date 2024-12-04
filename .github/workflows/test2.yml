@@ -35,8 +35,8 @@ jobs:
       run: |
         kube-linter version
 
-        - name: Validate Kubernetes manifests
-        run: |
+    - name: Validate Kubernetes manifests
+      run: |
           # Verify that the directory exists
           if [ -d "manifests" ]; then
             kube-linter lint manifests/
