@@ -35,10 +35,20 @@ jobs:
       run: |
         kube-linter version
 
-    - name: Validate Kubernetes manifests
-      run: |
-        kube-linter lint manifests/
-
+        - name: Validate Kubernetes manifests
+        run: |
+          # Verify that the directory exists
+          if [ -d "manifests" ]; then
+            kube-linter lint manifests/
+          else
+            echo "Error: 'manifests/' directory not found. Skipping kube-linter lint."
+            exit 1
+          fi
+  
     - name: Install Helm
       run: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  
+    - name: Lint Helm charts
+      run: |
+          helm lint ./charts/myapp
