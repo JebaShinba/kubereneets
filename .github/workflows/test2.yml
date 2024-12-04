@@ -65,14 +65,14 @@ jobs:
     
     - name: Check for chart.yaml
       run: |
-        if [ -f "k8s/chart.yaml" ]; then
+        if [ -f "k8s/Chart.yaml" ]; then
           echo "'chart.yaml' found in 'k8s'. Renaming it to 'Chart.yaml'..."
         else
           echo "Error: 'chart.yaml' file not found. Exiting process."
           exit 1
         fi
-        - name: Run yamllint on k8s resources
-        run: |
+    - name: Run yamllint on k8s resources
+      run: |
           echo "Running yamllint on Kubernetes YAML files..."
           sudo apt-get install -y yamllint
           yamllint k8s/**/*.yaml
