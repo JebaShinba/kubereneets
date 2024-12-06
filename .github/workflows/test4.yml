@@ -1,0 +1,82 @@
+name: Minikube Setup and Multi-Container Pod Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  minikube-deployment:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Install Minikube and Dependencies
+      - name: Install Minikube and Kubernetes Tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y curl apt-transport-https conntrack
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update -y
+          sudo apt-get install -y kubeadm kubelet kubectl
+          sudo apt-mark hold kubelet kubeadm kubectl
+
+      # Step 3: Start Minikube
+      - name: Start Minikube
+        run: |
+          minikube start --driver=none
+          minikube status
+
+      # Step 4: Initialize Kubeadm and Configure Kubelet
+      - name: Initialize Kubernetes Cluster
+        run: |
+          sudo kubeadm init --pod-network-cidr=192.168.0.0/16
+          mkdir -p $HOME/.kube
+          sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+          sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+      # Step 5: Deploy Flannel Network Plugin
+      - name: Deploy Network Plugin
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+          kubectl get nodes
+
+      # Step 6: Deploy Multi-Container Pod
+      - name: Deploy Multi-Container Pod
+        run: |
+          cat <<EOF > multi-container-pod.yaml
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: multi-container-pod
+          spec:
+            containers:
+            - name: nginx-container
+              image: nginx:latest
+              ports:
+              - containerPort: 80
+            - name: busybox-container
+              image: busybox
+              command: ["sh", "-c", "echo Hello Kubernetes! && sleep 3600"]
+          EOF
+          kubectl apply -f multi-container-pod.yaml
+          kubectl get pods
+
+      # Step 7: Test the Pod Deployment
+      - name: Test Pod Deployment
+        run: |
+          kubectl exec -it multi-container-pod -c nginx-container -- echo "Nginx container is up"
+          kubectl logs multi-container-pod -c busybox-container
+
+      # Step 8: Cleanup Resources
+      - name: Cleanup Resources
+        if: always()
+        run: |
+          kubectl delete pod multi-container-pod || true
+          minikube delete
