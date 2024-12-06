@@ -1,4 +1,4 @@
-name: Deploy to Kubernetes
+name: Deploy Pod to Kubernetes
 
 on:
   push:
@@ -8,14 +8,18 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.26.0'
+    - name: Set up kubectl
+      run: |
+        echo "$KUBECONFIG_CONTENT" > kubeconfig
+        export KUBECONFIG=$(pwd)/kubeconfig
+        kubectl version --client
 
-      - name: Deploy Pod
-        run: kubectl apply -f pod.yaml
+    - name: Apply Kubernetes Configuration
+      run: |
+        kubectl apply -f k8s/pod.yaml
+
