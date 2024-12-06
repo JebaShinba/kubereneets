@@ -20,11 +20,19 @@ jobs:
           sudo apt-get install -y curl apt-transport-https conntrack
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
-          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          echo "deb https://apt.kubernetes.io/ kubernetes-jammy main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+          curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
           sudo apt-get update -y
           sudo apt-get install -y kubeadm kubelet kubectl
           sudo apt-mark hold kubeadm kubelet kubectl
+
+      - name: Verify Kubernetes Tools
+        run: |
+          kubectl version --client
+          kubeadm version
+          kubelet --version
+
+
 
 
       # Step 3: Start Minikube
