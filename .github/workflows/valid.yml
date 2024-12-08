@@ -46,7 +46,7 @@ jobs:
           kind create cluster --name ci-cd-cluster
           kubectl cluster-info
 
-      # Step 4: Deploy Application
+     
      - name: Deploy to Kubernetes
        run: |
           kubectl apply -f k8s/
