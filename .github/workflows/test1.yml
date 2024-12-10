@@ -1,0 +1,82 @@
+name: Minikube CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  minikube:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Install Dependencies
+      - name: Install Dependencies
+        run: |
+          # Install required dependencies
+          sudo apt-get update
+          sudo apt-get install -y conntrack
+
+          # Install Docker
+          sudo apt-get remove -y containerd docker docker-engine docker.io runc
+          sudo apt-get update
+          sudo apt-get install -y \
+            apt-transport-https \
+            ca-certificates \
+            curl \
+            gnupg \
+            lsb-release
+
+          # Add Docker's official GPG key
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+          # Set up the stable Docker repository
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+          # Install Docker
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+
+          # Install kubectl and minikube
+          sudo apt-get install -y kubectl
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+      # Start Docker service
+      - name: Start Docker service
+        run: |
+          # Ensure Docker is started
+          sudo systemctl enable --now docker
+          sudo systemctl status docker
+
+      # Start Minikube
+      - name: Start Minikube
+        env:
+          MINIKUBE_IN_STYLE: false  # Disable interactive mode for CI
+        run: |
+          minikube start --driver=docker
+          kubectl cluster-info
+
+      # Apply Kubernetes Deployment
+      - name: Apply Kubernetes Deployment
+        run: |
+          kubectl apply -f deployment.yaml
+          kubectl rollout status deployment/nginx-deployment
+
+      # Verify Pods Status
+      - name: Verify Pods
+        run: |
+          kubectl get pods
+          kubectl describe pods
+
+      # Cleanup Resources
+      - name: Cleanup Minikube
+        if: always()  # Ensures cleanup even if previous steps fail
+        run: |
+          kubectl delete -f deployment.yaml || true
+          minikube stop
+          minikube delete
