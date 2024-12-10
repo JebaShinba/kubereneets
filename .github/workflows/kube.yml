@@ -27,29 +27,16 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:latest .
         docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-    # Checkout code
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    # Set up kubectl
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
 
-    # Configure kubectl
-    - name: Configure kubectl
-      run: |
-        echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
-        export KUBECONFIG=kubeconfig
-
-    # Deploy to Kubernetes
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f k8s/deployment.yml
-        kubectl rollout status deployment/my-app
+          kubectl apply -f k8s/deployment.yaml
+          kubectl rollout status deployment/my-app
+
+    - name: Run Integration Tests
+      run: |
+          kubectl apply -f k8s/test-deployment.yaml
+          kubectl wait --for=condition=available --timeout=60s deployment/test
+          kubectl logs deployment/test
