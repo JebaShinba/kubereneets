@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: test
-  labels:
-    app: test
 spec:
   replicas: 1
   selector:
@@ -15,25 +13,7 @@ spec:
         app: test
     spec:
       containers:
-      - name: test-container
-        image: my-app:latest
-        command: ["sh", "-c", "echo Running integration tests && sleep 30 && exit 0"]
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
-        env:
-        - name: TEST_ENV
-          value: "integration"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 3
-          periodSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 3
-          periodSeconds: 5
+        - name: test-container
+          image: my-app:latest
+          ports:
+            - containerPort: 80
