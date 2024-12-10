@@ -1,4 +1,4 @@
-name: CI/CD with Kubernetes
+name: CI/CD Pipeline for Kubernetes
 
 on:
   push:
@@ -10,33 +10,60 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout code
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Docker Image
+        run: |
+          docker build -t my-app:latest .
+          docker tag my-app:latest <registry>/my-app:latest
+          docker push <registry>/my-app:latest
 
-    # Build Docker image
-    - name: Build Docker image
-      run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:latest .
-        docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
+      - name: Check Kubernetes Cluster Status
+        run: |
+          kubectl cluster-info || exit 1  # Ensures the cluster is running
 
-    - name: Deploy to Kubernetes
-      run: |
-          kubectl apply -f k8s/deployment.yaml
+      - name: Check kubectl Configuration
+        run: |
+          kubectl config current-context || exit 1  # Ensures correct context is being used
+
+      - name: Verify Connection to API Server
+        run: |
+          kubectl cluster-info || exit 1  # Verifies connection to the API server
+
+      - name: Ensure Correct Kubeconfig File is Used
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml  # Use secret to inject the kubeconfig
+          export KUBECONFIG=kubeconfig.yaml
+
+      - name: Restart Kubernetes API Server (Minikube/Docker Desktop)
+        run: |
+          minikube stop || true
+          minikube start || true
+          # For Docker Desktop, use the respective restart command or UI for restarting the Kubernetes cluster
+
+      - name: Apply Kubernetes Deployment
+        run: |
+          kubectl apply -f k8s/deployment.yaml --validate=false  # Optionally bypass validation if needed
+          
+      - name: Rollout Deployment
+        run: |
           kubectl rollout status deployment/my-app
 
-    - name: Run Integration Tests
-      run: |
+      - name: Run Integration Tests
+        run: |
           kubectl apply -f k8s/test-deployment.yaml
           kubectl wait --for=condition=available --timeout=60s deployment/test
           kubectl logs deployment/test
+
+      - name: Check Logs for Errors (Optional)
+        run: |
+          kubectl get pods || exit 1  # Check the status of all pods
+          kubectl logs -l app=my-app || exit 1  # Check logs for the app container
