@@ -24,41 +24,45 @@ spec:
               cpu: "100m"
               memory: "64Mi"
             limits:
+              cpu: "200m"  # Set a CPU limit to avoid containers consuming too much CPU
               memory: "128Mi"
-          # Optional: Add environment variables if necessary for configuration
           env:
             - name: APP_ENV
-              value: "production"  # Set app environment if needed
-          # Liveness and readiness probes should be under containers
+              value: "production"
           livenessProbe:
             httpGet:
               path: /healthz
               port: 80
             initialDelaySeconds: 30
             periodSeconds: 30
+            timeoutSeconds: 5  # Added timeout to avoid hanging liveness checks
+            failureThreshold: 3 # Increase to retry more times before considering it a failure
           readinessProbe:
             httpGet:
               path: /readiness
               port: 80
             initialDelaySeconds: 10
             periodSeconds: 5
-      # Image pull secret if using a private registry
+            timeoutSeconds: 5  # Added timeout to avoid hanging readiness checks
+            failureThreshold: 3
       imagePullSecrets:
-        - name: my-registry-secret  # Change this to your actual secret name
+        - name: my-registry-secret
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - my-app
-              topologyKey: kubernetes.io/hostname
+            - weight: 1
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - my-app
+                topologyKey: kubernetes.io/hostname
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 1
+  # Added terminationGracePeriodSeconds for pod termination behavior
+  terminationGracePeriodSeconds: 60  # Allow time for clean shutdowns
