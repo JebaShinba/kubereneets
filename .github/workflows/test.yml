@@ -13,26 +13,30 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-
+      # Remove conflicting packages
       - name: Prepare Environment
         run: |
-            sudo apt-get remove -y containerd docker docker-engine docker.io runc
-            sudo apt-get update
-            sudo apt-get --fix-broken install
-            sudo apt-get autoremove -y
-      - name: Install Containerd.io
-        run: sudo apt-get install -y containerd.io
+          sudo apt-get remove -y containerd containerd.io docker docker-engine docker.io runc || true
+          sudo apt-get update
+          sudo apt-get autoremove -y
+          sudo apt-get --fix-broken install
 
-
-      # Install dependencies
-      - name: Install Dependencies
+      # Add Docker's official repository for containerd.io
+      - name: Configure Docker Repository
         run: |
           sudo apt-get update
-          sudo apt-get install -y conntrack
+          sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+
+      # Install containerd.io and other dependencies
+      - name: Install Dependencies
+        run: |
+          sudo apt-get install -y containerd.io conntrack
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
-          sudo apt-get install -y docker.io
-          sudo apt-get install -y kubectl
+          sudo apt-get install -y docker.io kubectl
 
       # Start Minikube
       - name: Start Minikube
@@ -61,4 +65,3 @@ jobs:
           kubectl delete -f deployment.yaml || true
           minikube stop
           minikube delete
-
