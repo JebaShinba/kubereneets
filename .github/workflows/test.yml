@@ -13,24 +13,29 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Remove conflicting packages
-      - name: Prepare Environment
+      # Purge all related packages
+      - name: Remove Conflicting Packages
         run: |
-          sudo apt-get remove -y containerd containerd.io docker docker-engine docker.io runc || true
-          sudo apt-get update
+          sudo apt-get remove -y --purge containerd containerd.io docker docker.io docker-ce docker-ce-cli runc || true
           sudo apt-get autoremove -y
-          sudo apt-get --fix-broken install
+          sudo apt-get autoclean
 
-      # Add Docker's official repository for containerd.io
+      # Clean up and fix broken dependencies
+      - name: Fix Broken Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get --fix-broken install
+          sudo dpkg --configure -a
+
+      # Add Docker's official repository
       - name: Configure Docker Repository
         run: |
-          sudo apt-get update
           sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt-get update
 
-      # Install containerd.io and other dependencies
+      # Install containerd.io and related dependencies
       - name: Install Dependencies
         run: |
           sudo apt-get install -y containerd.io conntrack
@@ -65,3 +70,4 @@ jobs:
           kubectl delete -f deployment.yaml || true
           minikube stop
           minikube delete
+
