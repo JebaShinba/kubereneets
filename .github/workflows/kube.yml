@@ -22,8 +22,9 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t my-app:latest .
-          docker tag my-app:latest ${{ secrets.DOCKER_REGISTRY }}/my-app:latest
-          docker push ${{ secrets.DOCKER_REGISTRY }}/my-app:latest
+          docker tag my-app:latest docker.io/jebashinba/my-app:latest
+          docker push docker.io/jebashinba/my-app:latest
+
 
 
   deploy:
