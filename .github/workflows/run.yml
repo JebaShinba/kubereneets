@@ -34,7 +34,7 @@ jobs:
           echo "export KUBEVIRT_VERSION=latest" >> $GITHUB_ENV
           minikube kubectl -- get pods
 
-      # Your deployment steps here
+    
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/deployment.yaml
