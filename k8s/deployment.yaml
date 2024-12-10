@@ -29,6 +29,19 @@ spec:
           env:
             - name: APP_ENV
               value: "production"  # Set app environment if needed
+          # Liveness and readiness probes should be under containers
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
       # Image pull secret if using a private registry
       imagePullSecrets:
         - name: my-registry-secret  # Change this to your actual secret name
@@ -49,18 +62,3 @@ spec:
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 1
-  # Set up liveness and readiness probes for health checks
-  # Ensure that your app responds on the appropriate port
-  # Example for an nginx server:
-  livenessProbe:
-    httpGet:
-      path: /healthz
-      port: 80
-    initialDelaySeconds: 30
-    periodSeconds: 30
-  readinessProbe:
-    httpGet:
-      path: /readiness
-      port: 80
-    initialDelaySeconds: 10
-    periodSeconds: 5
