@@ -1,0 +1,28 @@
+name: Minikube CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  minikube:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y conntrack
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+          sudo apt-get install -y docker.io
+
+      - name: Start Minikube
+        run: |
+          minikube start --driver=docker
+          kubectl cluster-info
+
+      - name: Run Tests
+        run: |
+          kubectl apply -f deployment.yaml
+          kubectl get pods

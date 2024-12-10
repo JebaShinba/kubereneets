@@ -1,68 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app
+  name: nginx-deployment
+  labels:
+    app: nginx
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
-      app: my-app
+      app: nginx
   template:
     metadata:
       labels:
-        app: my-app
+        app: nginx
     spec:
       containers:
-        - name: my-app
-          image: nginx:1.25.1
-          securityContext:
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 1000
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "64Mi"
-            limits:
-              cpu: "200m"  # Set a CPU limit to avoid containers consuming too much CPU
-              memory: "128Mi"
-          env:
-            - name: APP_ENV
-              value: "production"
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 80
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5  # Added timeout to avoid hanging liveness checks
-            failureThreshold: 3 # Increase to retry more times before considering it a failure
-          readinessProbe:
-            httpGet:
-              path: /readiness
-              port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 5  # Added timeout to avoid hanging readiness checks
-            failureThreshold: 3
-      imagePullSecrets:
-        - name: my-registry-secret
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 1
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - my-app
-                topologyKey: kubernetes.io/hostname
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
-  # Added terminationGracePeriodSeconds for pod termination behavior
-  terminationGracePeriodSeconds: 60  # Allow time for clean shutdowns
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+
