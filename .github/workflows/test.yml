@@ -13,6 +13,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+
+      - name: Prepare Environment
+        run: |
+            sudo apt-get remove -y containerd docker docker-engine docker.io runc
+            sudo apt-get update
+            sudo apt-get --fix-broken install
+            sudo apt-get autoremove -y
+      - name: Install Containerd.io
+        run: sudo apt-get install -y containerd.io
+
+
       # Install dependencies
       - name: Install Dependencies
         run: |
