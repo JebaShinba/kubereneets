@@ -13,35 +13,31 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Purge all related packages
-      - name: Remove Conflicting Packages
+      # Prepare Environment
+      - name: Prepare Environment
         run: |
-          sudo apt-get remove -y --purge containerd containerd.io docker docker.io docker-ce docker-ce-cli runc || true
+          # Remove conflicting packages
+          sudo apt-get remove --purge -y containerd containerd.io docker docker-engine docker.io runc
           sudo apt-get autoremove -y
+          sudo apt-get clean
+          sudo apt-get update
+
+          # Fix broken dependencies
+          sudo apt-get --fix-broken install -y
           sudo apt-get autoclean
 
-      # Clean up and fix broken dependencies
-      - name: Fix Broken Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get --fix-broken install
-          sudo dpkg --configure -a
-
-      # Add Docker's official repository
-      - name: Configure Docker Repository
-        run: |
-          sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update
-
-      # Install containerd.io and related dependencies
+      # Install required packages: containerd.io and dependencies
       - name: Install Dependencies
         run: |
-          sudo apt-get install -y containerd.io conntrack
+          # Install containerd.io (avoid conflicts)
+          sudo apt-get install -y containerd.io
+
+          # Install conntrack and kubectl
+          sudo apt-get install -y conntrack kubectl
+
+          # Install Minikube
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
-          sudo apt-get install -y docker.io kubectl
 
       # Start Minikube
       - name: Start Minikube
@@ -70,4 +66,5 @@ jobs:
           kubectl delete -f deployment.yaml || true
           minikube stop
           minikube delete
+
 
