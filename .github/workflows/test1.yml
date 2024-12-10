@@ -74,6 +74,15 @@ jobs:
           kubectl get pods
           kubectl describe pods
 
+
+      # Additional steps for testing or verification
+      - name: Run Integration Tests
+        run: |
+          kubectl apply -f k8s/test-deployment.yaml
+          kubectl wait --for=condition=available --timeout=60s deployment/test
+          kubectl logs deployment/test
+
+
       # Cleanup Resources
       - name: Cleanup Minikube
         if: always()  # Ensures cleanup even if previous steps fail
