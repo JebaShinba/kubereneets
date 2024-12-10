@@ -39,13 +39,13 @@ jobs:
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
-      # Start Minikube
       - name: Start Minikube
         env:
-          MINIKUBE_IN_STYLE: false # Disable interactive mode for CI
+         MINIKUBE_IN_STYLE: false # Disable interactive mode for CI
         run: |
-          minikube start --driver=docker --wait
-          kubectl cluster-info
+                minikube start --driver=docker
+                kubectl cluster-info
+            
 
       # Apply Kubernetes Deployment
       - name: Apply Kubernetes Deployment
