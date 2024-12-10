@@ -61,11 +61,12 @@ jobs:
           minikube start --driver=docker
           kubectl cluster-info
 
-      # Apply Kubernetes Deployment
+    # Apply Kubernetes Deployment
       - name: Apply Kubernetes Deployment
         run: |
-          kubectl apply -f deployment.yaml
+          kubectl apply -f k8s/deployment.yaml  # Update the path if needed
           kubectl rollout status deployment/nginx-deployment
+
 
       # Verify Pods Status
       - name: Verify Pods
