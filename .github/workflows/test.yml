@@ -9,6 +9,11 @@ jobs:
   minikube:
     runs-on: ubuntu-latest
     steps:
+      # Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Install dependencies
       - name: Install Dependencies
         run: |
           sudo apt-get update
@@ -16,13 +21,33 @@ jobs:
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
           sudo apt-get install -y docker.io
+          sudo apt-get install -y kubectl
 
+      # Start Minikube
       - name: Start Minikube
+        env:
+          MINIKUBE_IN_STYLE: false # Disable interactive mode for CI
         run: |
-          minikube start --driver=docker
+          minikube start --driver=docker --wait
           kubectl cluster-info
 
-      - name: Run Tests
+      # Apply Kubernetes Deployment
+      - name: Apply Kubernetes Deployment
         run: |
           kubectl apply -f deployment.yaml
+          kubectl rollout status deployment/nginx-deployment
+
+      # Verify Pods Status
+      - name: Verify Pods
+        run: |
           kubectl get pods
+          kubectl describe pods
+
+      # Cleanup Resources
+      - name: Cleanup Minikube
+        if: always() # Ensures cleanup even if previous steps fail
+        run: |
+          kubectl delete -f deployment.yaml || true
+          minikube stop
+          minikube delete
+
